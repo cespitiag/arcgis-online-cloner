@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ArcGIS Online Content Cloner</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 30px auto; padding: 0 20px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card { background: #f4f4f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, textarea { width: 95%; padding: 8px; margin-top: 5px; }
+    button { margin-top: 20px; padding: 12px 20px; background-color: #007ac2; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
+    button:hover { background-color: #005a9e; }
+    #status { margin-top: 20px; padding: 15px; border-radius: 4px; display: none; }
+    .success { background-color: #e6f4ea; color: #137333; border: 1px solid #ceedd5; }
+    .error { background-color: #fce8e6; color: #c5221f; border: 1px solid #fad2cf; }
+  </style>
+</head>
+<body>
+
+  <h2>ArcGIS Online Content Cloning Tool</h2>
+  
+  <div class="grid">
+    <!-- Source Account -->
+    <div class="card">
+      <h3>Source Organization</h3>
+      <label>Portal URL:</label>
+      <input type="text" id="source_url" value="https://www.arcgis.com">
+      <label>Username:</label>
+      <input type="text" id="source_user" placeholder="source_username">
+      <label>Password:</label>
+      <input type="password" id="source_pass">
+    </div>
+
+    <!-- Target Account -->
+    <div class="card">
+      <h3>Target Organization</h3>
+      <label>Portal URL:</label>
+      <input type="text" id="target_url" value="https://www.arcgis.com">
+      <label>Username:</label>
+      <input type="text" id="target_user" placeholder="target_username">
+      <label>Password:</label>
+      <input type="password" id="target_pass">
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 20px;">
+    <h3>Cloning Configuration</h3>
+    <label>Item IDs (comma-separated):</label>
+    <textarea id="item_ids" rows="3" placeholder="e.g., 3c8a910816a34ab591f868c279432608, 9d8f8d22..."></textarea>
+    
+    <label>Target Folder:</label>
+    <input type="text" id="target_folder" value="Cloned_Content">
+  </div>
+
+  <button onclick="executeClone()">Start Cloning</button>
+
+  <div id="status"></div>
+
+  <script>
+    async function executeClone() {
+      const statusDiv = document.getElementById("status");
+      statusDiv.style.display = "block";
+      statusDiv.className = "";
+      statusDiv.innerHTML = "Processing cloning... Please wait.";
+
+      const rawIds = document.getElementById("item_ids").value;
+      const itemIdsArray = rawIds.split(",").map(id => id.trim()).filter(id => id.length > 0);
+
+      const payload = {
+        url_origen: document.getElementById("source_url").value,
+        user_origen: document.getElementById("source_user").value,
+        pass_origen: document.getElementById("source_pass").value,
+        url_destino: document.getElementById("target_url").value,
+        user_destino: document.getElementById("target_user").value,
+        pass_destino: document.getElementById("target_pass").value,
+        item_ids: itemIdsArray,
+        folder_destino: document.getElementById("target_folder").value
+      };
+
+      try {
+        const response = await fetch("/api/clone", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          statusDiv.className = "success";
+          statusDiv.innerHTML = `<strong>Success!</strong> ${data.mensaje || data.message}`;
+        } else {
+          statusDiv.className = "error";
+          statusDiv.innerHTML = `<strong>Error:</strong> ${data.detail}`;
+        }
+      } catch (err) {
+        statusDiv.className = "error";
+        statusDiv.innerHTML = `<strong>Connection Error:</strong> Could not connect to the backend server.`;
+      }
+    }
+  </script>
+</body>
+</html>
