@@ -2,68 +2,315 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ArcGIS Online Content Cloner</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 30px auto; padding: 0 20px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .card { background: #f4f4f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
-    label { display: block; margin-top: 10px; font-weight: bold; }
-    input, textarea { width: 95%; padding: 8px; margin-top: 5px; }
-    button { margin-top: 20px; padding: 12px 20px; background-color: #007ac2; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
-    button:hover { background-color: #005a9e; }
-    #status { margin-top: 20px; padding: 15px; border-radius: 4px; display: none; }
-    .success { background-color: #e6f4ea; color: #137333; border: 1px solid #ceedd5; }
-    .error { background-color: #fce8e6; color: #c5221f; border: 1px solid #fad2cf; }
-  </style>
   <link rel="icon" type="image/png" href="/static/favicon.png">
+  
+  <!-- Fuente externa para un aspecto más limpio -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-color: #007ac2;
+      --primary-hover: #005a9e;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --focus-ring: rgba(0, 122, 194, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Header Section */
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .header-title svg {
+      fill: var(--primary-color);
+      width: 32px;
+      height: 32px;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    /* Grid Layout */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+
+    .card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background-color: #fff;
+      color: var(--text-main);
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px var(--focus-ring);
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    /* Button */
+    .btn-submit {
+      margin-top: 24px;
+      padding: 14px 24px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+      font-weight: 600;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      box-shadow: 0 2px 4px rgba(0, 122, 194, 0.2);
+    }
+
+    .btn-submit:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.99);
+    }
+
+    /* Status Notifications */
+    #status {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 8px;
+      display: none;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .status-processing {
+      background-color: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+
+    .success {
+      background-color: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .error {
+      background-color: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    /* Contact Footer */
+    .footer {
+      margin-top: 50px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer p {
+      margin-bottom: 8px;
+    }
+
+    .contact-links {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .contact-links a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .contact-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
 
-  <h2>ArcGIS Online Content Cloning Tool</h2>
-  
-  <div class="grid">
-    <!-- Source Account -->
-    <div class="card">
-      <h3>Source Organization</h3>
-      <label>Portal URL:</label>
-      <input type="text" id="source_url" value="https://www.arcgis.com">
-      <label>Username:</label>
-      <input type="text" id="source_user" placeholder="source_username">
-      <label>Password:</label>
-      <input type="password" id="source_pass">
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1 class="header-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        ArcGIS Online Content Cloner
+      </h1>
+      <p>Seamlessly transfer items and layers between AGOL organizations or portals</p>
     </div>
-
-    <!-- Target Account -->
-    <div class="card">
-      <h3>Target Organization</h3>
-      <label>Portal URL:</label>
-      <input type="text" id="target_url" value="https://www.arcgis.com">
-      <label>Username:</label>
-      <input type="text" id="target_user" placeholder="target_username">
-      <label>Password:</label>
-      <input type="password" id="target_pass">
-    </div>
-  </div>
-
-  <div class="card" style="margin-top: 20px;">
-    <h3>Cloning Configuration</h3>
-    <label>Item IDs (comma-separated):</label>
-    <textarea id="item_ids" rows="3" placeholder="e.g., 3c8a910816a34ab591f868c279432608, 9d8f8d22..."></textarea>
     
-    <label>Target Folder:</label>
-    <input type="text" id="target_folder" value="Cloned_Content">
+    <div class="grid">
+      <!-- Source Account -->
+      <div class="card">
+        <h3>Source Organization</h3>
+        <div class="form-group">
+          <label for="source_url">Portal URL</label>
+          <input type="text" id="source_url" value="https://www.arcgis.com">
+        </div>
+        <div class="form-group">
+          <label for="source_user">Username</label>
+          <input type="text" id="source_user" placeholder="source_username">
+        </div>
+        <div class="form-group">
+          <label for="source_pass">Password</label>
+          <input type="password" id="source_pass">
+        </div>
+      </div>
+
+      <!-- Target Account -->
+      <div class="card">
+        <h3>Target Organization</h3>
+        <div class="form-group">
+          <label for="target_url">Portal URL</label>
+          <input type="text" id="target_url" value="https://www.arcgis.com">
+        </div>
+        <div class="form-group">
+          <label for="target_user">Username</label>
+          <input type="text" id="target_user" placeholder="target_username">
+        </div>
+        <div class="form-group">
+          <label for="target_pass">Password</label>
+          <input type="password" id="target_pass">
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuration -->
+    <div class="card" style="margin-top: 20px;">
+      <h3>Cloning Configuration</h3>
+      <div class="form-group">
+        <label for="item_ids">Item IDs (comma-separated):</label>
+        <textarea id="item_ids" rows="3" placeholder="e.g., 3c8a910816a34ab591f868c279432608, 9d8f8d22..."></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="target_folder">Target Folder Name:</label>
+        <input type="text" id="target_folder" value="Cloned_Content">
+      </div>
+    </div>
+
+    <button class="btn-submit" onclick="executeClone()">Start Cloning</button>
+
+    <div id="status"></div>
   </div>
 
-  <button onclick="executeClone()">Start Cloning</button>
-
-  <div id="status"></div>
+  <!-- Footer con Información de Contacto -->
+  <footer class="footer">
+    <p><strong>ArcGIS Content Cloner Tool</strong> &bull; Developed for <strong>meridia.py</strong></p>
+    <div class="contact-links">
+      <span>Need help or have questions?</span>
+      <a href="mailto:cristianfelipeespitiagarcia@gmail.com">✉ Email Support</a>
+      <a href="https://linkedin.com" target="_blank">💼 LinkedIn</a>
+    </div>
+  </footer>
 
   <script>
     async function executeClone() {
       const statusDiv = document.getElementById("status");
       statusDiv.style.display = "block";
-      statusDiv.className = "";
-      statusDiv.innerHTML = "Processing cloning... Please wait.";
+      statusDiv.className = "status-processing";
+      statusDiv.innerHTML = "⏳ <strong>Processing cloning...</strong> Please wait while items are being cloned.";
 
       const rawIds = document.getElementById("item_ids").value;
       const itemIdsArray = rawIds.split(",").map(id => id.trim()).filter(id => id.length > 0);
@@ -90,10 +337,10 @@
 
         if (response.ok) {
           statusDiv.className = "success";
-          statusDiv.innerHTML = `<strong>Success!</strong> ${data.mensaje || data.message}`;
+          statusDiv.innerHTML = `<strong>Success!</strong> ${data.mensaje || data.message || 'Items cloned successfully.'}`;
         } else {
           statusDiv.className = "error";
-          statusDiv.innerHTML = `<strong>Error:</strong> ${data.detail}`;
+          statusDiv.innerHTML = `<strong>Error:</strong> ${data.detail || 'An issue occurred during execution.'}`;
         }
       } catch (err) {
         statusDiv.className = "error";
